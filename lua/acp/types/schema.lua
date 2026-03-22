@@ -28,7 +28,18 @@
 ---@field mimeType string
 
 ---Describes an available authentication method.
----@class acp.AuthMethod
+---
+---The `type` field acts as the discriminator in the serialized JSON form.
+---When no `type` is present, the method is treated as `agent`.
+
+---Agent handles authentication itself.  This is the default when no `type` is specified.
+---@class acp.AuthMethod_agent : acp.AuthMethodAgent
+---@alias acp.AuthMethod acp.AuthMethod_agent
+
+---Agent handles authentication itself.
+---
+---This is the default authentication method type.
+---@class acp.AuthMethodAgent
 ---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
 ---@field description string|nil? Optional description providing more details about this authentication method.
 ---@field id string Unique identifier for this authentication method.
@@ -85,7 +96,7 @@
 ---See protocol docs: [Client Capabilities](https://agentclientprotocol.com/protocol/initialization#client-capabilities)
 ---@class acp.ClientCapabilities
 ---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
----@field fs acp.FileSystemCapability? File system capabilities supported by the client. Determines which file operations the agent can request.
+---@field fs acp.FileSystemCapabilities? File system capabilities supported by the client. Determines which file operations the agent can request.
 ---@field terminal boolean? Whether the Client support all `terminal/*` methods.
 
 ---Session configuration options have been updated.
@@ -253,11 +264,10 @@
 ---See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
 ---@class acp.ExtResponse
 
----Filesystem capabilities supported by the client.
 ---File system capabilities that a client may support.
 ---
 ---See protocol docs: [FileSystem](https://agentclientprotocol.com/protocol/initialization#filesystem)
----@class acp.FileSystemCapability
+---@class acp.FileSystemCapabilities
 ---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
 ---@field readTextFile boolean? Whether the Client supports `fs/read_text_file` requests.
 ---@field writeTextFile boolean? Whether the Client supports `fs/write_text_file` requests.
@@ -308,15 +318,29 @@
 ---@field authMethods acp.AuthMethod[]? Authentication methods supported by the agent.
 ---@field protocolVersion acp.ProtocolVersion The protocol version the client specified if supported by the agent, or the latest protocol version supported by the agent.  The client should disconnect, if it doesn't support this version.
 
----Request to kill a terminal command without releasing the terminal.
----@class acp.KillTerminalCommandRequest
+---Request to kill a terminal without releasing it.
+---@class acp.KillTerminalRequest
 ---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
 ---@field sessionId acp.SessionId The session ID for this request.
 ---@field terminalId string The ID of the terminal to kill.
 
----Response to terminal/kill command method
----@class acp.KillTerminalCommandResponse
+---Response to `terminal/kill` method
+---@class acp.KillTerminalResponse
 ---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+
+---Request parameters for listing existing sessions.
+---
+---Only available if the Agent supports the `sessionCapabilities.list` capability.
+---@class acp.ListSessionsRequest
+---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+---@field cursor string|nil? Opaque cursor token from a previous response's nextCursor field for cursor-based pagination
+---@field cwd string|nil? Filter sessions by working directory. Must be an absolute path.
+
+---Response from listing sessions.
+---@class acp.ListSessionsResponse
+---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+---@field nextCursor string|nil? Opaque cursor token. If present, pass this in the next request's cursor parameter to fetch the next page. If absent, there are no more results.
+---@field sessions acp.SessionInfo[] Array of session information objects
 
 ---Request parameters for loading an existing session.
 ---
@@ -589,6 +613,7 @@
 ---See protocol docs: [Session Capabilities](https://agentclientprotocol.com/protocol/initialization#session-capabilities)
 ---@class acp.SessionCapabilities
 ---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+---@field list acp.SessionListCapabilities|nil? Whether the agent supports `session/list`.
 
 ---Unique identifier for a session configuration option value group.
 ---@alias acp.SessionConfigGroupId string
@@ -655,6 +680,29 @@
 ---
 ---See protocol docs: [Session ID](https://agentclientprotocol.com/protocol/session-setup#session-id)
 ---@alias acp.SessionId string
+
+---Information about a session returned by session/list
+---@class acp.SessionInfo
+---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+---@field cwd string The working directory for this session. Must be an absolute path.
+---@field sessionId acp.SessionId Unique identifier for the session
+---@field title string|nil? Human-readable title for the session
+---@field updatedAt string|nil? ISO 8601 timestamp of last activity
+
+---Update to session metadata. All fields are optional to support partial updates.
+---
+---Agents send this notification to update session information like title or custom metadata.
+---This allows clients to display dynamic session names and track session state changes.
+---@class acp.SessionInfoUpdate
+---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
+---@field title string|nil? Human-readable title for the session. Set to null to clear.
+---@field updatedAt string|nil? ISO 8601 timestamp of last activity. Set to null to clear.
+
+---Capabilities for the `session/list` method.
+---
+---By supplying `{}` it means that the agent supports listing of sessions.
+---@class acp.SessionListCapabilities
+---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
 
 ---A mode the agent can operate in.
 ---
@@ -725,7 +773,11 @@
 ---Session configuration options have been updated.
 ---@class acp.SessionUpdate_9 : acp.ConfigOptionUpdate
 ---@field sessionUpdate "config_option_update"
----@alias acp.SessionUpdate acp.SessionUpdate_1|acp.SessionUpdate_2|acp.SessionUpdate_3|acp.SessionUpdate_4|acp.SessionUpdate_5|acp.SessionUpdate_6|acp.SessionUpdate_7|acp.SessionUpdate_8|acp.SessionUpdate_9
+
+---Session metadata has been updated (title, timestamps, custom metadata)
+---@class acp.SessionUpdate_10 : acp.SessionInfoUpdate
+---@field sessionUpdate "session_info_update"
+---@alias acp.SessionUpdate acp.SessionUpdate_1|acp.SessionUpdate_2|acp.SessionUpdate_3|acp.SessionUpdate_4|acp.SessionUpdate_5|acp.SessionUpdate_6|acp.SessionUpdate_7|acp.SessionUpdate_8|acp.SessionUpdate_9|acp.SessionUpdate_10
 
 ---Request parameters for setting a session configuration option.
 ---@class acp.SetSessionConfigOptionRequest
@@ -747,7 +799,7 @@
 
 ---Response to `session/set_mode` method.
 ---@class acp.SetSessionModeResponse
----@field _meta table|nil?
+---@field _meta table|nil? The _meta property is reserved by ACP to allow clients and agents to attach additional metadata to their interactions. Implementations MUST NOT make assumptions about values at these keys.  See protocol docs: [Extensibility](https://agentclientprotocol.com/protocol/extensibility)
 
 ---Reasons why an agent stops processing a prompt turn.
 ---
