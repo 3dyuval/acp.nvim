@@ -474,7 +474,7 @@ function M.create_or_load_session(agent_name, session_id)
 		local mcp_caps = agent_caps.mcpCapabilities or {}
 		local filtered_mcp = {}
 		for _, srv in ipairs(mcp) do
-			if srv.type == "stdio" or mcp_caps[srv.type] then
+			if not srv.type or srv.type == "stdio" or mcp_caps[srv.type] then
 				table.insert(filtered_mcp, srv)
 			end
 		end
