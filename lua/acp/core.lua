@@ -44,7 +44,7 @@ local handlers = {
 		session.pending_permission = { options = options, response = response }
 		vim.b[buf].acp_requesting_permission = true
 
-		local lines = { "\n⚠️ Permission required: " .. title }
+		local lines = { "\n[permission] " .. title }
 		for i, o in ipairs(options) do
 			table.insert(lines, ("  %d. %s"):format(i, o.name))
 		end
@@ -219,7 +219,7 @@ local handlers = {
 				utils.add_output(buf, "\n\n" .. vim.fn.prompt_getprompt(buf) .. content.text .. "\n\n")
 			end
 		elseif u.sessionUpdate == "tool_call" then
-			utils.add_output(buf, ("\n🔧 %s (%s)\n"):format(u.title, u.status or "pending"))
+			utils.add_output(buf, ("\n[tool] %s (%s)\n"):format(u.title, u.status or "pending"))
 			for _, tc in ipairs(u.content or {}) do
 				if tc.content and tc.content.type == "text" then
 					utils.add_output(buf, tc.content.text)
@@ -238,11 +238,11 @@ local handlers = {
 			local has_content = u.content and #u.content > 0
 
 			if has_title and has_status then
-				utils.add_output(buf, ("\n🔧 %s (%s)\n"):format(u.title, u.status))
+				utils.add_output(buf, ("\n[tool] %s (%s)\n"):format(u.title, u.status))
 			elseif has_title then
-				utils.add_output(buf, ("\n🔧 %s\n"):format(u.title))
+				utils.add_output(buf, ("\n[tool] %s\n"):format(u.title))
 			elseif has_status and has_content then
-				utils.add_output(buf, ("\n🔧 %s\n"):format(u.status))
+				utils.add_output(buf, ("\n[tool] %s\n"):format(u.status))
 			end
 
 			for _, tc in ipairs(u.content or {}) do
@@ -588,7 +588,7 @@ function M.prompt_callback(bufnr, text)
 		return
 	end
 
-	utils.add_output(bufnr, "\n\n🤖 ")
+	utils.add_output(bufnr, "\n\n[you] ")
 	M.send_prompt(bufnr, text)
 end
 
