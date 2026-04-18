@@ -488,7 +488,7 @@ function M.create_or_load_session(agent_name, session_id)
 				return
 			end
 
-			session = vim.tbl_deep_extend("error", session, new_sess_res)
+			session = vim.tbl_deep_extend("force", session, new_sess_res)
 
 			--- Don't save client directly in M.sessions to avoid polluting
 			--- checkhealth, etc
