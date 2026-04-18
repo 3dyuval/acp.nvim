@@ -836,6 +836,33 @@ M.ex_subcmd = {
 			return vim.bo.filetype == "acpchat"
 		end,
 	},
+	["commands"] = {
+		callback = function()
+			local buf = api.nvim_get_current_buf()
+			local session = M.sessions[buf]
+			if not session or #(session.available_commands or {}) == 0 then
+				vim.notify("No commands available", vim.log.levels.WARN)
+				return
+			end
+			vim.ui.select(session.available_commands, {
+				prompt = "Run command:",
+				format_item = function(c)
+					return "/" .. c.name .. (c.description ~= "" and ("  — " .. c.description) or "")
+				end,
+			}, function(choice)
+				if choice then
+					api.nvim_buf_set_lines(buf, -1, -1, false, { "/" .. choice.name .. " " })
+					api.nvim_win_set_cursor(0, { api.nvim_buf_line_count(buf), #choice.name + 2 })
+					vim.cmd("startinsert!")
+				end
+			end)
+		end,
+		condition = function()
+			local buf = api.nvim_get_current_buf()
+			return vim.bo.filetype == "acpchat"
+				and #(vim.tbl_get(M.sessions, buf, "available_commands") or {}) > 0
+		end,
+	},
 	paste = {
 		callback = function()
 			api.nvim_paste(vim.fn.getreg("+"), false, -1)
