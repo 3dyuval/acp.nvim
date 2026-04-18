@@ -876,7 +876,8 @@ M.ex_subcmd = {
 
 setmetatable(M.ex_subcmd, {
 	__index = function(_, k)
-		return require("acp").subcommands[k]
+		local acp = require("acp")
+		return acp.subcommands and acp.subcommands[k]
 	end,
 })
 
