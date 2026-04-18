@@ -433,6 +433,7 @@ function M.create_or_load_session(agent_name, session_id)
 			api.nvim_win_set_buf(win, buf)
 		end
 		vim.bo[buf].filetype = "acpchat"
+		vim.bo[buf].buftype = "nofile"
 		print(buf)
 	end
 
