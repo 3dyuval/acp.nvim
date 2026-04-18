@@ -63,7 +63,6 @@ function M.configMcp2McpServer(mcp_config)
 				command = config.cmd[1],
 				args = vim.list_slice(config.cmd, 2),
                 env = config.env and M.configEnv2EnvVariables(config.env) or nil,
-				type = "stdio"
 			})
 		elseif config.url then
 			table.insert(result, {
