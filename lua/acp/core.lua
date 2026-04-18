@@ -438,7 +438,7 @@ function M.create_or_load_session(agent_name, session_id)
 
 	start_agent(agent_name, function(client)
 		if session_id then
-			if not client.agentCapabilities.loadSession then
+			if not (client.agentCapabilities.loadSession or vim.tbl_get(client, "agentCapabilities", "sessionCapabilities", "resume")) then
 				vim.notify(
 					("Agent '%s' does not support loading existing sessions"):format(agent_name),
 					vim.log.levels.ERROR
