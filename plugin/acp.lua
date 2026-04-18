@@ -15,7 +15,11 @@ api.nvim_create_autocmd("BufReadCmd", {
 			return -- Session already exists for this buffer, do nothing
 		end
 		vim.bo[a.buf].filetype = "acpchat"
-		vim.bo[a.buf].buftype = "nofile"
+		vim.bo[a.buf].swapfile = false
+		vim.api.nvim_create_autocmd("BufWriteCmd", {
+			buffer = a.buf,
+			callback = function() vim.bo[a.buf].modified = false end,
+		})
 		local bufname = a.match
 		local agent = bufname:match("^acp://([^/]+)")
 		local sessionId = bufname:match("^acp://[^/]+/(.+)$")
