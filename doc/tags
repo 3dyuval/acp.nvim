@@ -1,0 +1,14 @@
+:Acp	acp.txt	/*:Acp*
+acp	acp.txt	/*acp*
+acp-api	acp.txt	/*acp-api*
+acp-configuration	acp.txt	/*acp-configuration*
+acp-contributing	acp.txt	/*acp-contributing*
+acp-expend	acp.txt	/*acp-expend*
+acp-interaction	acp.txt	/*acp-interaction*
+acp-introduction	acp.txt	/*acp-introduction*
+acp.add_resource()	acp.txt	/*acp.add_resource()*
+acp.config()	acp.txt	/*acp.config()*
+acp.config.Agent	acp.txt	/*acp.config.Agent*
+acp.config.Mcp	acp.txt	/*acp.config.Mcp*
+acp.register_subcommand()	acp.txt	/*acp.register_subcommand()*
+acp.txt	acp.txt	/*acp.txt*

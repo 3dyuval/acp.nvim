@@ -844,7 +844,8 @@ M.ex_subcmd = {
 
 setmetatable(M.ex_subcmd, {
 	__index = function(_, k)
-		return require("acp").subcommands[k]
+		-- Return nil for missing keys to avoid the error when accessing subcommands
+		return nil
 	end,
 })
 
