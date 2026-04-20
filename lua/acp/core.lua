@@ -438,7 +438,7 @@ function M.create_or_load_session(agent_name, session_id)
 
 	start_agent(agent_name, function(client)
 		if session_id then
-			if not client.agentCapabilities.loadSession then
+			if not (client.agentCapabilities.loadSession or vim.tbl_get(client, "agentCapabilities", "sessionCapabilities", "resume")) then
 				vim.notify(
 					("Agent '%s' does not support loading existing sessions"):format(agent_name),
 					vim.log.levels.ERROR
@@ -720,6 +720,38 @@ end
 ---@field callback fun(args: string)
 ---@field condition? fun(): boolean
 M.ex_subcmd = {
+	["resume-session"] = {
+		complete = function()
+			return iter(vim.tbl_keys(M.config.agents)):join("\n")
+		end,
+		callback = function(agent_name)
+			agent_name = agent_name or M.config.default_agent
+			local result = vim.system({ "opencode", "session", "list" }):wait()
+			if result.code ~= 0 then
+				vim.notify("Failed to list sessions", vim.log.levels.ERROR)
+				return
+			end
+			local sessions = {}
+			for line in result.stdout:gmatch("[^\n]+") do
+				local id, title = line:match("^(ses_%S+)%s+(.+)%s+%d+:%d+")
+				if id then
+					table.insert(sessions, { id = id, title = vim.trim(title) })
+				end
+			end
+			if #sessions == 0 then
+				vim.notify("No sessions found", vim.log.levels.WARN)
+				return
+			end
+			vim.ui.select(sessions, {
+				prompt = "Resume session:",
+				format_item = function(s) return s.title .. "  [" .. s.id .. "]" end,
+			}, function(choice)
+				if choice then
+					M.create_or_load_session(agent_name, choice.id)
+				end
+			end)
+		end,
+	},
 	["new-session"] = {
 		complete = function()
 			return iter(vim.tbl_keys(M.config.agents)):join("\n")
